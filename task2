@@ -1,0 +1,115 @@
+import random
+
+# Define constants for the players
+PLAYER_X = "X"
+PLAYER_O = "O"
+EMPTY = " "
+
+# Function to check for a win
+def check_win(board, player):
+    win_conditions = [(0, 1, 2), (3, 4, 5), (6, 7, 8),  # Rows
+                      (0, 3, 6), (1, 4, 7), (2, 5, 8),  # Columns
+                      (0, 4, 8), (2, 4, 6)]  # Diagonals
+    for condition in win_conditions:
+        if board[condition[0]] == board[condition[1]] == board[condition[2]] == player:
+            return True
+    return False
+
+# Function to evaluate the board
+def evaluate(board):
+    if check_win(board, PLAYER_X):
+        return 1  # AI wins
+    elif check_win(board, PLAYER_O):
+        return -1  # Opponent wins
+    else:
+        return 0  # Draw or still playing
+
+# Minimax algorithm
+def minimax(board, depth, is_maximizing):
+    score = evaluate(board)
+
+    # If the game is over, return the score
+    if score == 1 or score == -1:
+        return score
+    if " " not in board:
+        return 0  # Draw
+
+    # Maximizing player (AI)
+    if is_maximizing:
+        best = -float('inf')
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = PLAYER_X
+                best = max(best, minimax(board, depth + 1, False))
+                board[i] = " "
+        return best
+
+    # Minimizing player (Opponent)
+    else:
+        best = float('inf')
+        for i in range(9):
+            if board[i] == " ":
+                board[i] = PLAYER_O
+                best = min(best, minimax(board, depth + 1, True))
+                board[i] = " "
+        return best
+
+# Function to find the best move for AI
+def find_best_move(board):
+    best_val = -float('inf')
+    best_move = -1
+    for i in range(9):
+        if board[i] == " ":
+            board[i] = PLAYER_X
+            move_val = minimax(board, 0, False)
+            board[i] = " "
+            if move_val > best_val:
+                best_move = i
+                best_val = move_val
+    return best_move
+
+# Function to display the board
+def print_board(board):
+    for i in range(0, 9, 3):
+        print(board[i], "|", board[i+1], "|", board[i+2])
+        if i < 6:
+            print("--------")
+
+# Game logic
+def play_game():
+    board = [" "]*9
+    turn = 0  # 0 for AI, 1 for human
+    while " " in board:
+        if turn == 0:  # AI's turn
+            move = find_best_move(board)
+            board[move] = PLAYER_X
+            print("AI's Move:")
+            print_board(board)
+            if evaluate(board) == 1:
+                print("AI wins!")
+                break
+        else:  # Human's turn
+            while True:
+                try:
+                    move = int(input("Enter your move (1-9): ")) - 1
+                    if move < 0 or move > 8:
+                        print("Invalid move! Please enter a number between 1 and 9.")
+                    elif board[move] != " ":
+                        print("That spot is already taken. Choose a different one.")
+                    else:
+                        board[move] = PLAYER_O
+                        break
+                except ValueError:
+                    print("Invalid input! Please enter a number between 1 and 9.")
+                    
+            print_board(board)
+            if evaluate(board) == -1:
+                print("You win!")
+                break
+        turn ^= 1  # Switch turn
+
+    if " " not in board and evaluate(board) == 0:
+        print("It's a draw!")
+
+# Start the game
+play_game()
